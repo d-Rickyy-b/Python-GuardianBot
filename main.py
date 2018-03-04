@@ -18,10 +18,11 @@ from config import BOT_TOKEN, admin_channel_id, admins, chats
 
 logfile_dir_path = os.path.dirname(os.path.abspath(__file__))
 logfile_abs_path = os.path.join(logfile_dir_path, "logs", "bot.log")
-logfile_handler = logging.FileHandler(logfile_abs_path, 'a', 'utf-8')
 
 if not os.path.exists(os.path.join(logfile_dir_path, "logs")):
     os.makedirs(os.path.join(logfile_dir_path, "logs"))
+
+logfile_handler = logging.FileHandler(logfile_abs_path, 'a', 'utf-8')
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
