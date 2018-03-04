@@ -5,7 +5,7 @@ import re
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.error import TelegramError, BadRequest
-from telegram.ext import Updater, MessageHandler, Filters, CallbackQueryHandler, CommandHandler
+from telegram.ext import Updater, MessageHandler, Filters, CallbackQueryHandler
 
 from Incident import Incident
 from Incidents import Incidents
@@ -14,7 +14,6 @@ from MessageFilters.AllowedChatsFilter import AllowedChatsFilter
 from MessageFilters.ChannelForwardFilter import ChannelForwardFilter
 from MessageFilters.JoinChatLinkFilter import JoinChatLinkFilter
 from MessageFilters.UsernameFilter import UsernameFilter
-
 from config import BOT_TOKEN, admin_channel_id, admins, chats
 
 logfile_dir_path = os.path.dirname(os.path.abspath(__file__))
@@ -23,7 +22,6 @@ logfile_handler = logging.FileHandler(logfile_abs_path, 'a', 'utf-8')
 
 if not os.path.exists(os.path.join(logfile_dir_path, "logs")):
     os.makedirs(os.path.join(logfile_dir_path, "logs"))
-
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -160,12 +158,12 @@ def admin_mention(bot, update):
 
     # for admin in admins:
     bot.sendMessage(admin_channel_id, text="*Someone needs an admin!*\n"
-                                        "\n*Chat:* {chat}"
-                                        "\n*Name:* {user}"
-                                        "\n\n[Direct Link](https://t.me/{g_name}/{m_id})".format(chat=update.message.chat.title,
-                                                                                                 user=update.message.from_user.first_name,
-                                                                                                 g_name=update.message.chat.username,
-                                                                                                 m_id=update.message.message_id),
+                                           "\n*Chat:* {chat}"
+                                           "\n*Name:* {user}"
+                                           "\n\n[Direct Link](https://t.me/{g_name}/{m_id})".format(chat=update.message.chat.title,
+                                                                                                    user=update.message.from_user.first_name,
+                                                                                                    g_name=update.message.chat.username,
+                                                                                                    m_id=update.message.message_id),
                     parse_mode="Markdown")
 
 
