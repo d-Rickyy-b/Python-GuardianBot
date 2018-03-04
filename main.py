@@ -26,8 +26,9 @@ if not os.path.exists(os.path.join(logfile_dir_path, "logs")):
 
 
 logger = logging.getLogger(__name__)
-# logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO, handlers=[logfile_handler])
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    level=logging.INFO,
+                    handlers=[logfile_handler, logging.StreamHandler()])
 
 # Check if bot token is valid
 if not re.match("[0-9]+:[a-zA-Z0-9\-_]+", BOT_TOKEN):
