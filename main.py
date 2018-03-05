@@ -27,7 +27,8 @@ logfile_handler = logging.FileHandler(logfile_abs_path, 'a', 'utf-8')
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO,
-                    handlers=[logfile_handler, logging.StreamHandler()])
+                    handlers=[logfile_handler])
+# Add logging.StreamHandler() for stderr debugging purposes
 
 # Check if bot token is valid
 if not re.match("[0-9]+:[a-zA-Z0-9\-_]+", BOT_TOKEN):
