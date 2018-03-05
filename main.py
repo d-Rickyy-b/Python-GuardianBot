@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import logging
+import logging.handlers
 import os
 import re
 
@@ -22,7 +22,7 @@ logfile_abs_path = os.path.join(logfile_dir_path, "logs", "bot.log")
 if not os.path.exists(os.path.join(logfile_dir_path, "logs")):
     os.makedirs(os.path.join(logfile_dir_path, "logs"))
 
-logfile_handler = logging.FileHandler(logfile_abs_path, 'a', 'utf-8')
+logfile_handler = logging.handlers.WatchedFileHandler(logfile_abs_path, 'a', 'utf-8')
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
