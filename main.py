@@ -178,5 +178,6 @@ dp.add_handler(CallbackQueryHandler(callback_handler))
 
 updater.start_polling()
 logger.info("Bot started")
+updater.bot.sendMessage(admin_channel_id, text="Bot restarted")
 logger.info("Admins are: {}".format(admins))
 updater.idle()
