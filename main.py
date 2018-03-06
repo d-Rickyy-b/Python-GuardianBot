@@ -56,6 +56,8 @@ def spam_detected(bot, update):
     chat_id = update.message.chat_id
     user_id = update.message.from_user.id
 
+    logger.info("Detected spam in chat '{}' by user '{}'".format(update.message.chat.title, update.message.from_user.full_name))
+
     try:
         # ban user from chat
         bot.kickChatMember(chat_id, user_id)
