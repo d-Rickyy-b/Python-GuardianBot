@@ -14,6 +14,7 @@ from MessageFilters.AllowedChatsFilter import AllowedChatsFilter
 from MessageFilters.ChannelForwardFilter import ChannelForwardFilter
 from MessageFilters.JoinChatLinkFilter import JoinChatLinkFilter
 from MessageFilters.UsernameFilter import UsernameFilter
+from MessageFilters.UserJoinedFilter import UserJoinedFilter
 from config import BOT_TOKEN, admin_channel_id, admins, chats
 
 logdir_path = os.path.dirname(os.path.abspath(__file__))
@@ -88,6 +89,37 @@ def ask_admins(bot, update):
     # Create a new "incident" which will be handled by the admins
     new_incident = Incident(chat_id=chat_id, message_id=message_id, admin_channel_message_id=admin_message.message_id)
     incidents.append(new_incident)
+
+
+# When a new user joins the group, his name should be checked for frequently
+# used scammer names. Often scammers use a pattern like 'Elvira J Joy' or '
+# Elly W Wonder', which can easily be detected via RegEx
+def check_and_ban_suspicious_users(bot, update):
+    chat_id = update.message.chat.id
+    user_id = update.message.from_user.id
+
+    for member in update.message.new_chat_members:
+        username = member.username if member.username is not None else "no username"
+
+        name = member.full_name
+        match = re.search("[A-Za-z]+ ([A-Za-z]{1}) ([A-Za-z]+)", name)
+
+        if match:
+            if match.group(1) == match.group(2)[:1]:
+                text = "Banned suspected scammer {name} (@{username}) " \
+                       "with id {id}".format(name=name,
+                                             username=username,
+                                             id=member.id)
+
+                try:
+                    bot.kickChatMember(chat_id, user_id)
+                    logger.info(text)
+                except TelegramError as e:
+                    logger.error(e)
+
+                    bot.send_message(admin_channel_id, text=text)
+
+    return False
 
 
 # This function will be called, when someone adds this bot to any group which
@@ -170,6 +202,7 @@ def admin_mention(bot, update):
 
 
 dp.add_handler(MessageHandler(Filters.group & (~ AllowedChatsFilter()), leave_group))
+dp.add_handler(MessageHandler(Filters.group & UserJoinedFilter(), check_and_ban_suspicious_users))
 dp.add_handler(MessageHandler(Filters.group & ChannelForwardFilter(), spam_detected))
 dp.add_handler(MessageHandler(Filters.group & JoinChatLinkFilter(), spam_detected))
 dp.add_handler(MessageHandler(Filters.group & AdminMentionFilter(), admin_mention))
