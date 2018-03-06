@@ -47,7 +47,9 @@ for chat_id in chats:
             my_admins.append(admin.user.id)
         admins = set(my_admins)
     except BadRequest:
-        logger.error("Couldn't fetch admins. Are you sure the bot is member of chat {}?".format(chat_id))
+        text = "Couldn't fetch admins. " \
+               "Are you sure the bot is member of chat {}?".format(chat_id)
+        logger.error(text)
 
 
 # Message will be called if spam is detected. The message will be removed
