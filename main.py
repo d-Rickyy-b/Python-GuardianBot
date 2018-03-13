@@ -12,6 +12,7 @@ from Incidents import Incidents
 from config import BOT_TOKEN, admin_channel_id, admins, chats
 from filters import AdminFilters
 from filters import ScamFilters
+from FloodBuffer import FloodBuffer
 
 logdir_path = os.path.dirname(os.path.abspath(__file__))
 logfile_path = os.path.join(logdir_path, "logs", "bot.log")
@@ -35,6 +36,7 @@ if not re.match("[0-9]+:[a-zA-Z0-9\-_]+", BOT_TOKEN):
 updater = Updater(token=BOT_TOKEN)
 dp = updater.dispatcher
 incidents = Incidents()
+floodBuffer = FloodBuffer()
 channel_admins = []
 
 
@@ -94,6 +96,11 @@ def ask_admins(bot, update):
     # Create a new "incident" which will be handled by the admins
     new_incident = Incident(chat_id=chat_id, message_id=message_id, admin_channel_message_id=admin_message.message_id)
     incidents.append(new_incident)
+
+
+# Method to notify admins about stuff
+def notify_admins(text):
+    updater.bot.send_message(admin_channel_id, text=text)
 
 
 # When a new user joins the group, his name should be checked for frequently
@@ -206,12 +213,27 @@ def admin_mention(bot, update):
                     parse_mode="Markdown")
 
 
+def flood_check(bot, update):
+    chat_id = update.effective_message.chat_id
+    user_id = update.effective_message.from_user.id
+    floodBuffer.add_message(update.effective_message)
+    if floodBuffer.flood_reached(user_id):
+        log_msg = "Detected flood in chat @{} by user '{}'. Kicking user!".format(update.effective_message.chat.username, update.effective_message.from_user.full_name)
+        notify_admins(log_msg)
+        logger.info(log_msg)
+        try:
+            bot.kickChatMember(chat_id, user_id)
+        except BadRequest:
+            logger.warning("User might be an admin, or something else went wrong while kicking!")
+
+
 dp.add_handler(MessageHandler(Filters.group & (~ ScamFilters.allowedChatsFilter), leave_group))
 dp.add_handler(MessageHandler(Filters.group & ScamFilters.userJoinedFilter, check_and_ban_suspicious_users))
 dp.add_handler(MessageHandler(Filters.group & ScamFilters.channelForwardFilter, scam_detected))
 dp.add_handler(MessageHandler(Filters.group & ScamFilters.joinChatLinkFilter, scam_detected))
 dp.add_handler(MessageHandler(Filters.group & AdminFilters.adminMentionFilter, admin_mention))
 dp.add_handler(MessageHandler(Filters.group & ScamFilters.usernameFilter, ask_admins))
+dp.add_handler(MessageHandler(Filters.group, flood_check))
 dp.add_handler(CallbackQueryHandler(callback_handler))
 
 reload_admins()
