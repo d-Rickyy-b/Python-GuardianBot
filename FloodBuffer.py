@@ -10,7 +10,6 @@ class FloodBuffer(object):
         self.messages = []
 
     def add_message(self, message):
-        print(message.date)
         self.messages.append(message)
         self.remove_old_messages()
 
