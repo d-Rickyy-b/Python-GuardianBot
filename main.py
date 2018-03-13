@@ -9,9 +9,9 @@ from telegram.ext import Updater, MessageHandler, Filters, CallbackQueryHandler
 
 from Incident import Incident
 from Incidents import Incidents
-from filters import ScamFilters
-from filters import AdminFilters
 from config import BOT_TOKEN, admin_channel_id, admins, chats
+from filters import AdminFilters
+from filters import ScamFilters
 
 logdir_path = os.path.dirname(os.path.abspath(__file__))
 logfile_path = os.path.join(logdir_path, "logs", "bot.log")
