@@ -9,12 +9,8 @@ from telegram.ext import Updater, MessageHandler, Filters, CallbackQueryHandler
 
 from Incident import Incident
 from Incidents import Incidents
-from MessageFilters.AdminMentionFilter import AdminMentionFilter
-from MessageFilters.AllowedChatsFilter import AllowedChatsFilter
-from MessageFilters.ChannelForwardFilter import ChannelForwardFilter
-from MessageFilters.JoinChatLinkFilter import JoinChatLinkFilter
-from MessageFilters.UsernameFilter import UsernameFilter
-from MessageFilters.UserJoinedFilter import UserJoinedFilter
+from filters import ScamFilters
+from filters import AdminFilters
 from config import BOT_TOKEN, admin_channel_id, admins, chats
 
 logdir_path = os.path.dirname(os.path.abspath(__file__))
@@ -205,12 +201,12 @@ def admin_mention(bot, update):
                     parse_mode="Markdown")
 
 
-dp.add_handler(MessageHandler(Filters.group & (~ AllowedChatsFilter()), leave_group))
-dp.add_handler(MessageHandler(Filters.group & UserJoinedFilter(), check_and_ban_suspicious_users))
-dp.add_handler(MessageHandler(Filters.group & ChannelForwardFilter(), spam_detected))
-dp.add_handler(MessageHandler(Filters.group & JoinChatLinkFilter(), spam_detected))
-dp.add_handler(MessageHandler(Filters.group & AdminMentionFilter(), admin_mention))
-dp.add_handler(MessageHandler(Filters.group & UsernameFilter(), ask_admins))
+dp.add_handler(MessageHandler(Filters.group & (~ ScamFilters.allowedChatsFilter), leave_group))
+dp.add_handler(MessageHandler(Filters.group & ScamFilters.userJoinedFilter, check_and_ban_suspicious_users))
+dp.add_handler(MessageHandler(Filters.group & ScamFilters.channelForwardFilter, spam_detected))
+dp.add_handler(MessageHandler(Filters.group & ScamFilters.joinChatLinkFilter, spam_detected))
+dp.add_handler(MessageHandler(Filters.group & AdminFilters.adminMentionFilter, admin_mention))
+dp.add_handler(MessageHandler(Filters.group & ScamFilters.usernameFilter, ask_admins))
 dp.add_handler(CallbackQueryHandler(callback_handler))
 
 updater.start_polling()
