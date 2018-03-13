@@ -102,7 +102,7 @@ def check_and_ban_suspicious_users(bot, update):
         username = member.username if member.username is not None else "no username"
 
         name = member.full_name
-        match = re.search("[A-Za-z]+ ([A-Za-z]{1}) ([A-Za-z]+)", name)
+        match = re.search("[A-Za-z]+ ([A-Za-z]) ([A-Za-z]+)", name)
 
         if match:
             if match.group(1) == match.group(2)[:1]:
