@@ -35,17 +35,22 @@ if not re.match("[0-9]+:[a-zA-Z0-9\-_]+", BOT_TOKEN):
 updater = Updater(token=BOT_TOKEN)
 dp = updater.dispatcher
 incidents = Incidents()
+channel_admins = []
 
-for chat_id in chats:
-    my_admins = list(admins)
-    try:
-        for admin in updater.bot.getChatAdministrators(chat_id):
-            my_admins.append(admin.user.id)
-        admins = set(my_admins)
-    except BadRequest:
-        text = "Couldn't fetch admins. " \
-               "Are you sure the bot is member of chat {}?".format(chat_id)
-        logger.error(text)
+
+# Has no real use for now. Can be used to contact admins in private
+def reload_admins():
+    global channel_admins
+    for chat_id in chats:
+        my_admins = list(admins)
+        try:
+            for admin in updater.bot.getChatAdministrators(chat_id):
+                my_admins.append(admin.user.id)
+            channel_admins = set(my_admins)
+        except BadRequest:
+            text = "Couldn't fetch admins. " \
+                   "Are you sure the bot is member of chat {}?".format(chat_id)
+            logger.error(text)
 
 
 # Message will be called if spam is detected. The message will be removed
@@ -209,6 +214,7 @@ dp.add_handler(MessageHandler(Filters.group & AdminFilters.adminMentionFilter, a
 dp.add_handler(MessageHandler(Filters.group & ScamFilters.usernameFilter, ask_admins))
 dp.add_handler(CallbackQueryHandler(callback_handler))
 
+reload_admins()
 updater.start_polling()
 logger.info("Bot started as  @{}".format(updater.bot.username))
 updater.bot.sendMessage(admin_channel_id, text="Bot restarted")
