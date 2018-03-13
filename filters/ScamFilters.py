@@ -12,9 +12,13 @@ class _JoinChatLinkFilter(BaseFilter):
         if message.text:
             if re.search("(t(elegram)?\.(me|dog|org))\/joinchat\/[a-zA-Z0-9\.\_\-]+", message.text, re.IGNORECASE):
                 return True
+            if re.search("tg:\/\/join\?invite=[a-zA-Z0-9\.\_\-]+", message.text, re.IGNORECASE):
+                return True
 
         if message.caption:
             if re.search("(t(elegram)?\.(me|dog|org))\/joinchat\/[a-zA-Z0-9\.\_\-]+", message.caption, re.IGNORECASE):
+                return True
+            if re.search("tg:\/\/join\?invite=[a-zA-Z0-9\.\_\-]+", message.caption, re.IGNORECASE):
                 return True
 
         return False
