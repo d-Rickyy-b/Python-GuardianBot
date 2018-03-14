@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/d-Rickyy-b/Python-GuardianBot.svg?branch=master)](https://travis-ci.org/d-Rickyy-b/Python-GuardianBot)
+
 # Python-GuardianBot
 This bot was designed for keeping spam and ads out of your public Telegram groups. It helps you by searching through all of the specified groups' messages. Keep in mind that the bot needs to have "privacy mode" switched off via [@BotFather](https://t.me/BotFather), to check all the messages.
 
@@ -21,6 +23,8 @@ You can find a sample configuration file [here](https://gist.github.com/d-Rickyy
 | `admin_channel_id` | int | The id of the admin channel, into which the bot posts suspicious messages. |
 | `admins` | list(int) | List of ids of users which are considered "admin" of the bot. Admins can delete suspicious messages, reported to the admin channel. |
 | `chats` | list(int) | List of chat ids, in which the bot should look for bot admins. Each group admin is considered bot admin. |
+| `flood_nr_of_msgs` | int | Number of messages, which a user can send in a certain time frame until he gets kicked for flood. |
+| `flood_time_in_secs` | int | Time frame which applies to `flood_nr_of_msgs`. |
 | `whitelisted_chats` | list(int) | A list of chat ids, into which the bot can be added. The bot will leave all other chats. |
 | `whitelisted_groups` | list(int) | A list of group ids, from which forwarded messages are allowed. Messages forwarded from other groups are considered spam. |
 | `whitelisted_channels` | list(int) | A list of channel ids, from which forwarded messages are allowed. Messages forwarded from other channels are considered spam. |

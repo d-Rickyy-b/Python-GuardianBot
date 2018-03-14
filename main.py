@@ -7,15 +7,12 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.error import TelegramError, BadRequest
 from telegram.ext import Updater, MessageHandler, Filters, CallbackQueryHandler
 
+from FloodBuffer import FloodBuffer
 from Incident import Incident
 from Incidents import Incidents
-from MessageFilters.AdminMentionFilter import AdminMentionFilter
-from MessageFilters.AllowedChatsFilter import AllowedChatsFilter
-from MessageFilters.ChannelForwardFilter import ChannelForwardFilter
-from MessageFilters.JoinChatLinkFilter import JoinChatLinkFilter
-from MessageFilters.UsernameFilter import UsernameFilter
-from MessageFilters.UserJoinedFilter import UserJoinedFilter
 from config import BOT_TOKEN, admin_channel_id, admins, chats
+from filters import AdminFilters
+from filters import ScamFilters
 
 logdir_path = os.path.dirname(os.path.abspath(__file__))
 logfile_path = os.path.join(logdir_path, "logs", "bot.log")
@@ -39,33 +36,42 @@ if not re.match("[0-9]+:[a-zA-Z0-9\-_]+", BOT_TOKEN):
 updater = Updater(token=BOT_TOKEN)
 dp = updater.dispatcher
 incidents = Incidents()
+floodBuffer = FloodBuffer()
+channel_admins = []
 
-for chat_id in chats:
-    my_admins = list(admins)
-    try:
-        for admin in updater.bot.getChatAdministrators(chat_id):
-            my_admins.append(admin.user.id)
-        admins = set(my_admins)
-    except BadRequest:
-        text = "Couldn't fetch admins. " \
-               "Are you sure the bot is member of chat {}?".format(chat_id)
-        logger.error(text)
+
+# Has no real use for now. Can be used to contact admins in private
+def reload_admins():
+    global channel_admins
+    for chat_id in chats:
+        my_admins = list(admins)
+        try:
+            for admin in updater.bot.getChatAdministrators(chat_id):
+                my_admins.append(admin.user.id)
+            channel_admins = set(my_admins)
+        except BadRequest:
+            text = "Couldn't fetch admins. " \
+                   "Are you sure the bot is member of chat {}?".format(chat_id)
+            logger.error(text)
 
 
 # Message will be called if spam is detected. The message will be removed
 # and the sender will be kicked
-def spam_detected(bot, update):
-    chat_id = update.message.chat_id
-    user_id = update.message.from_user.id
+def scam_detected(bot, update):
+    chat_id = update.effective_message.chat_id
+    user = update.effective_message.from_user
 
-    logger.info("Detected spam in chat '{}' by user '{}'".format(update.message.chat.title, update.message.from_user.full_name))
+    scam_found = "Detected scam in chat '{}' by user '{}' - @{}. Kicking user for scam.".format(update.message.chat.title, user.full_name, user.username)
+    logger.info(scam_found)
+    bot.send_message(admin_channel_id, scam_found)
 
     try:
         # ban user from chat
-        bot.kickChatMember(chat_id, user_id)
+        bot.kickChatMember(chat_id, user.id)
     except TelegramError:
-        logger.warning("Not able to kick user {}: {}".format(user_id, update.message))
-        # TODO send message to admins so they check it
+        error_msg = "Not able to kick user {}: {}".format(user.id, update.message)
+        logger.warning(error_msg)
+        bot.send_message(admin_channel_id, error_msg)
 
     try:
         # Delete message
@@ -95,6 +101,11 @@ def ask_admins(bot, update):
     incidents.append(new_incident)
 
 
+# Method to notify admins about stuff
+def notify_admins(text):
+    updater.bot.send_message(admin_channel_id, text=text)
+
+
 # When a new user joins the group, his name should be checked for frequently
 # used scammer names. Often scammers use a pattern like 'Elvira J Joy' or '
 # Elly W Wonder', which can easily be detected via RegEx
@@ -106,7 +117,7 @@ def check_and_ban_suspicious_users(bot, update):
         username = member.username if member.username is not None else "no username"
 
         name = member.full_name
-        match = re.search("[A-Za-z]+ ([A-Za-z]{1}) ([A-Za-z]+)", name)
+        match = re.search("[A-Za-z]+ ([A-Za-z]) ([A-Za-z]+)", name)
 
         if match:
             if match.group(1) == match.group(2)[:1]:
@@ -180,8 +191,8 @@ def callback_handler(bot, update):
             text += "\nCouldn't kick user! Maybe he already left!"
             try:
                 bot.editMessageText(chat_id=orig_chat_id, message_id=orig_message_id, text=text)
-            except:
-                pass
+            except Exception as e:
+                logger.error(e)
             logger.warning("Not able to kick user: {}. Maybe he already left or I'm not an admin!".format(user_id))
     elif action == "nospam":
         incidents.handle(Incident(chat_id=chat_id, message_id=message_id))
@@ -205,16 +216,35 @@ def admin_mention(bot, update):
                     parse_mode="Markdown")
 
 
-dp.add_handler(MessageHandler(Filters.group & (~ AllowedChatsFilter()), leave_group))
-dp.add_handler(MessageHandler(Filters.group & UserJoinedFilter(), check_and_ban_suspicious_users))
-dp.add_handler(MessageHandler(Filters.group & ChannelForwardFilter(), spam_detected))
-dp.add_handler(MessageHandler(Filters.group & JoinChatLinkFilter(), spam_detected))
-dp.add_handler(MessageHandler(Filters.group & AdminMentionFilter(), admin_mention))
-dp.add_handler(MessageHandler(Filters.group & UsernameFilter(), ask_admins))
+def flood_check(bot, update):
+    chat_id = update.effective_message.chat_id
+    user_id = update.effective_message.from_user.id
+    floodBuffer.add_message(update.effective_message)
+    if floodBuffer.flood_reached(user_id):
+        log_msg = "Detected flood in chat @{} by user '{}'. Kicking user!".format(update.effective_message.chat.username, update.effective_message.from_user.full_name)
+        notify_admins(log_msg)
+        logger.info(log_msg)
+        try:
+            bot.kickChatMember(chat_id, user_id)
+        except BadRequest:
+            warn_msg = "User might be an admin, or something else went wrong while kicking!"
+            logger.warning(warn_msg)
+            notify_admins(warn_msg)
+
+
+dp.add_handler(MessageHandler(Filters.group & (~ ScamFilters.allowedChatsFilter), leave_group))
+dp.add_handler(MessageHandler(Filters.group & ScamFilters.userJoinedFilter, check_and_ban_suspicious_users))
+dp.add_handler(MessageHandler(Filters.group & ScamFilters.channelForwardFilter, scam_detected))
+dp.add_handler(MessageHandler(Filters.group & ScamFilters.joinChatLinkFilter, scam_detected))
+dp.add_handler(MessageHandler(Filters.group & AdminFilters.adminMentionFilter, admin_mention))
+dp.add_handler(MessageHandler(Filters.group & ScamFilters.usernameFilter, ask_admins))
+dp.add_handler(MessageHandler(Filters.group & ScamFilters.tDotMeUsernameFilter, ask_admins))
+dp.add_handler(MessageHandler(Filters.group, flood_check))
 dp.add_handler(CallbackQueryHandler(callback_handler))
 
+reload_admins()
 updater.start_polling()
-logger.info("Bot started")
+logger.info("Bot started as @{}".format(updater.bot.username))
 updater.bot.sendMessage(admin_channel_id, text="Bot restarted")
 logger.info("Admins are: {}".format(admins))
 updater.idle()

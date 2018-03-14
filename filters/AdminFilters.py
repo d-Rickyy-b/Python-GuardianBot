@@ -1,7 +1,7 @@
 from telegram.ext import BaseFilter
 
 
-class AdminMentionFilter(BaseFilter):
+class _AdminMentionFilter(BaseFilter):
     name = "AdminMentionFilter"
 
     def filter(self, message):
@@ -10,3 +10,6 @@ class AdminMentionFilter(BaseFilter):
                     return True
 
         return False
+
+
+adminMentionFilter = _AdminMentionFilter()
