@@ -74,6 +74,22 @@ class _UsernameFilter(BaseFilter):
         return False
 
 
+class _TDotMeUsernameFilter(BaseFilter):
+    name = "TDotMeUsernameFilter"
+
+    def filter(self, message):
+        text = ""
+        if message.text:
+            text = message.text
+        elif message.caption:
+            text = message.caption
+
+        if re.search("((t(elegram)?\.(me|dog|org))\/(?!joinchat).+)", text, re.IGNORECASE):
+            return True
+
+        return False
+
+
 # A filter which returns True, if a message is sent in an allowed group and False if not.
 class _AllowedChatsFilter(BaseFilter):
     name = "AllowedChatsFilter"
@@ -90,4 +106,5 @@ channelForwardFilter = _ChannelForwardFilter()
 groupForwardFilter = _GroupForwardFilter()
 userJoinedFilter = _UserJoinedFilter()
 usernameFilter = _UsernameFilter()
+tDotMeUsernameFilter = _TDotMeUsernameFilter()
 allowedChatsFilter = _AllowedChatsFilter()

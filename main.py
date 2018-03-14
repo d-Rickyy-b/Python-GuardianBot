@@ -233,6 +233,7 @@ dp.add_handler(MessageHandler(Filters.group & ScamFilters.channelForwardFilter, 
 dp.add_handler(MessageHandler(Filters.group & ScamFilters.joinChatLinkFilter, scam_detected))
 dp.add_handler(MessageHandler(Filters.group & AdminFilters.adminMentionFilter, admin_mention))
 dp.add_handler(MessageHandler(Filters.group & ScamFilters.usernameFilter, ask_admins))
+dp.add_handler(MessageHandler(Filters.group & ScamFilters.tDotMeUsernameFilter, ask_admins))
 dp.add_handler(MessageHandler(Filters.group, flood_check))
 dp.add_handler(CallbackQueryHandler(callback_handler))
 
