@@ -188,8 +188,8 @@ def callback_handler(bot, update):
             text += "\nCouldn't kick user! Maybe he already left!"
             try:
                 bot.editMessageText(chat_id=orig_chat_id, message_id=orig_message_id, text=text)
-            except:
-                pass
+            except Exception as e:
+                logger.error(e)
             logger.warning("Not able to kick user: {}. Maybe he already left or I'm not an admin!".format(user_id))
     elif action == "nospam":
         incidents.handle(Incident(chat_id=chat_id, message_id=message_id))
