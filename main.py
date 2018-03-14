@@ -58,17 +58,18 @@ def reload_admins():
 # Message will be called if spam is detected. The message will be removed
 # and the sender will be kicked
 def scam_detected(bot, update):
-    chat_id = update.message.chat_id
-    user_id = update.message.from_user.id
+    chat_id = update.effective_message.chat_id
+    user = update.effective_message.from_user
 
-    logger.info("Detected spam in chat '{}' by user '{}'".format(update.message.chat.title, update.message.from_user.full_name))
+    scam_found = "Detected scam in chat '{}' by user '{}' - @{}. Kicking user for scam.".format(update.message.chat.title, user.full_name, user.username)
+    logger.info(scam_found)
 
     try:
         # ban user from chat
-        bot.kickChatMember(chat_id, user_id)
+        bot.kickChatMember(chat_id, user.id)
     except TelegramError:
-        logger.warning("Not able to kick user {}: {}".format(user_id, update.message))
-        # TODO send message to admins so they check it
+        error_msg = "Not able to kick user {}: {}".format(user.id, update.message)
+        logger.warning(error_msg)
 
     try:
         # Delete message
