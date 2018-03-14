@@ -224,7 +224,9 @@ def flood_check(bot, update):
         try:
             bot.kickChatMember(chat_id, user_id)
         except BadRequest:
-            logger.warning("User might be an admin, or something else went wrong while kicking!")
+            warn_msg = "User might be an admin, or something else went wrong while kicking!"
+            logger.warning(warn_msg)
+            notify_admins(warn_msg)
 
 
 dp.add_handler(MessageHandler(Filters.group & (~ ScamFilters.allowedChatsFilter), leave_group))
