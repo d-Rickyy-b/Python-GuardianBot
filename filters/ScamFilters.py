@@ -2,7 +2,7 @@ import re
 
 from telegram.ext import BaseFilter
 
-from config import whitelisted_channels, whitelisted_chats, whitelisted_groups
+from config import whitelisted_channels, whitelisted_chats, whitelisted_groups, allowed_usernames
 
 
 class _JoinChatLinkFilter(BaseFilter):
@@ -63,12 +63,16 @@ class _UsernameFilter(BaseFilter):
     name = "UsernameFilter"
 
     def filter(self, message):
+        text = ""
         if message.text:
-            if re.search("((t(elegram)?\.(me|dog|org))\/(?!joinchat).+|@.+)", message.text, re.IGNORECASE):
-                return True
+            text = message.text
+        elif message.caption:
+            text = message.caption
 
-        if message.caption:
-            if re.search("((t(elegram)?\.(me|dog|org))\/(?!joinchat).+|@.+)", message.caption, re.IGNORECASE):
+        match = re.search("@(.+)", text, re.IGNORECASE)
+
+        if match:
+            if match.group(0) not in allowed_usernames:
                 return True
 
         return False
