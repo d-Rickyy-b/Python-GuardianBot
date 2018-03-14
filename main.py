@@ -63,6 +63,7 @@ def scam_detected(bot, update):
 
     scam_found = "Detected scam in chat '{}' by user '{}' - @{}. Kicking user for scam.".format(update.message.chat.title, user.full_name, user.username)
     logger.info(scam_found)
+    bot.send_message(admin_channel_id, scam_found)
 
     try:
         # ban user from chat
@@ -70,6 +71,7 @@ def scam_detected(bot, update):
     except TelegramError:
         error_msg = "Not able to kick user {}: {}".format(user.id, update.message)
         logger.warning(error_msg)
+        bot.send_message(admin_channel_id, error_msg)
 
     try:
         # Delete message
