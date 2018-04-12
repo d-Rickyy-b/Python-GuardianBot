@@ -72,7 +72,7 @@ class _UsernameFilter(BaseFilter):
         match = re.search("@(.+)", text, re.IGNORECASE)
 
         if match:
-            if match.group(0) not in allowed_usernames:
+            if match.group(0).lower() not in [x.lower() for x in allowed_usernames]:
                 return True
 
         return False
