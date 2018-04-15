@@ -63,16 +63,15 @@ class _UsernameFilter(BaseFilter):
     name = "UsernameFilter"
 
     def filter(self, message):
-        text = ""
+        entities = []
+
         if message.text:
-            text = message.text
+            entities = message.parse_entities(types="mention")
         elif message.caption:
-            text = message.caption
+            entities = message.parse_caption_entities(types="mention")
 
-        match = re.search("@(.+)", text, re.IGNORECASE)
-
-        if match:
-            if match.group(0).lower() not in [x.lower() for x in allowed_usernames]:
+        for entity, username in entities.items():
+            if not username.lower() in [x.lower() for x in allowed_usernames]:
                 return True
 
         return False
