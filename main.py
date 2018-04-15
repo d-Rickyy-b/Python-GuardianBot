@@ -93,8 +93,19 @@ def ask_admins(bot, update):
     no_spam_button = InlineKeyboardButton("No Spam", callback_data='{user_id}_{chat_id}_{message_id}_nospam'.format(user_id=user_id, chat_id=chat_id, message_id=message_id))
     reply_markup = InlineKeyboardMarkup([[spam_button, no_spam_button]])
 
-    new_message = bot.forwardMessage(chat_id=admin_channel_id, from_chat_id=chat_id, message_id=message_id)
-    admin_message = bot.sendMessage(chat_id=admin_channel_id, text="Is this message spam?", reply_to_message_id=new_message.message_id, reply_markup=reply_markup)
+    direct_link = "\n\n[Direct Link](https://t.me/{g_name}/{m_id})".format(
+        g_name=update.message.chat.username,
+        m_id=update.message.message_id)
+
+    new_message = bot.forwardMessage(chat_id=admin_channel_id,
+                                     from_chat_id=chat_id,
+                                     message_id=message_id)
+
+    admin_message = bot.sendMessage(chat_id=admin_channel_id, text="Is this message spam?" + direct_link,
+                                    reply_to_message_id=new_message.message_id,
+                                    reply_markup=reply_markup,
+                                    disable_web_page_preview=True,
+                                    parse_mode="Markdown")
 
     # Create a new "incident" which will be handled by the admins
     new_incident = Incident(chat_id=chat_id, message_id=message_id, admin_channel_message_id=admin_message.message_id)
