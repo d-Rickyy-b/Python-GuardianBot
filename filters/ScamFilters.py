@@ -81,14 +81,16 @@ class _TDotMeUsernameFilter(BaseFilter):
     name = "TDotMeUsernameFilter"
 
     def filter(self, message):
-        text = ""
-        if message.text:
-            text = message.text
-        elif message.caption:
-            text = message.caption
+        entities = []
 
-        if re.search("((t(elegram)?\.(me|dog|org))\/(?!joinchat).+)", text, re.IGNORECASE):
-            return True
+        if message.text:
+            entities = message.parse_entities(types="url")
+        elif message.caption:
+            entities = message.parse_caption_entities(types="url")
+
+        for entity, url in entities.items():
+            if re.search("((t(elegram)?\.(me|dog|org))\/(?!joinchat).+)", url, re.IGNORECASE):
+                return True
 
         return False
 
