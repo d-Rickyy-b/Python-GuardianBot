@@ -89,7 +89,7 @@ class _TDotMeUsernameFilter(BaseFilter):
             entities = message.parse_caption_entities(types="url")
 
         for entity, url in entities.items():
-            if re.search("((t(elegram)?\.(me|dog|org))\/(?!joinchat).+)", url, re.IGNORECASE):
+            if re.search("((t(elegram)?\.(me|dog|org))\/(?!joinchat)[a-zA-Z_]+)", url, re.IGNORECASE):
                 return True
 
         return False
