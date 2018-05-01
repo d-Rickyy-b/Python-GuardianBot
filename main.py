@@ -78,7 +78,12 @@ def scam_detected(bot, update):
         bot.deleteMessage(chat_id, message_id=update.message.message_id)
     except TelegramError:
         logger.warning("Not able to delete message: {}".format(update.message))
-        # TODO send message to admins so they check it
+        warn_msg = "Warning - message could not be deleted. " \
+                   "[Please Check!](https://t.me/{g_name}/{m_id})".format(chat=update.message.chat.title,
+                                                                          user=update.message.from_user.first_name,
+                                                                          g_name=update.message.chat.username,
+                                                                          m_id=update.message.message_id)
+        bot.send_message(admin_channel_id, warn_msg)
 
 
 # Method which will be called, when the message could potentially be spam, but
