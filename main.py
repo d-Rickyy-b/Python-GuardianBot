@@ -61,7 +61,7 @@ def scam_detected(bot, update):
     chat_id = update.effective_message.chat_id
     user = update.effective_message.from_user
 
-    scam_found = "Detected scam in chat '{}' by user '{}' - @{}. Kicking user for scam.".format(update.message.chat.title, user.full_name, user.username)
+    scam_found = "Detected scam in chat @{} by user '{}' - @{}. Kicking user for scam.".format(update.message.chat.username, user.full_name, user.username)
     logger.info(scam_found)
     bot.send_message(admin_channel_id, scam_found)
 
