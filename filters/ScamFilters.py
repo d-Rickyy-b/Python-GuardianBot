@@ -71,7 +71,7 @@ class _UsernameFilter(BaseFilter):
             entities = message.parse_caption_entities(types="mention")
 
         for entity, username in entities.items():
-            if not username.lower() in [x.lower() for x in allowed_usernames]:
+            if username.lower() not in [x.lower() for x in allowed_usernames]:
                 return True
 
         return False
