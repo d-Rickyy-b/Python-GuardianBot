@@ -1,9 +1,11 @@
 import re
 
 from telegram.ext import BaseFilter
+import logging
 
 from config import whitelisted_channels, whitelisted_chats, whitelisted_groups, allowed_usernames
 
+logger = logging.getLogger(__name__)
 
 class _JoinChatLinkFilter(BaseFilter):
     name = "JoinChatLinkFilter"
@@ -72,6 +74,7 @@ class _UsernameFilter(BaseFilter):
 
         for entity, username in entities.items():
             if username.lower() not in [x.lower() for x in allowed_usernames]:
+                logger.info("Username '{}' not in list of allowed usernames!".format(username))
                 return True
 
         return False
