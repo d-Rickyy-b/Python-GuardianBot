@@ -73,6 +73,8 @@ class _UsernameFilter(BaseFilter):
             entities = message.parse_caption_entities(types="mention")
 
         for entity, username in entities.items():
+            # check if mentioned username is in allowed_usernames list
+            # convert to lowercase to not have false positives
             if username.lower() not in [x.lower() for x in allowed_usernames]:
                 logger.info("Username '{}' not in list of allowed usernames!".format(username))
                 return True
