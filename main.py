@@ -61,7 +61,7 @@ def scam_detected(bot, update):
     chat_id = update.effective_message.chat_id
     user = update.effective_message.from_user
 
-    scam_found = "Detected scam in chat '{}' by user '{}' - @{}. Kicking user for scam.".format(update.message.chat.title, user.full_name, user.username)
+    scam_found = "Detected scam in chat @{} by user '{}' - @{}. Kicking user for scam.".format(update.message.chat.username, user.full_name, user.username)
     logger.info(scam_found)
     bot.send_message(admin_channel_id, scam_found)
 
@@ -78,7 +78,12 @@ def scam_detected(bot, update):
         bot.deleteMessage(chat_id, message_id=update.message.message_id)
     except TelegramError:
         logger.warning("Not able to delete message: {}".format(update.message))
-        # TODO send message to admins so they check it
+        warn_msg = "Warning - message could not be deleted. " \
+                   "[Please Check!](https://t.me/{g_name}/{m_id})".format(chat=update.message.chat.title,
+                                                                          user=update.message.from_user.first_name,
+                                                                          g_name=update.message.chat.username,
+                                                                          m_id=update.message.message_id)
+        bot.send_message(admin_channel_id, warn_msg)
 
 
 # Method which will be called, when the message could potentially be spam, but
@@ -93,8 +98,19 @@ def ask_admins(bot, update):
     no_spam_button = InlineKeyboardButton("No Spam", callback_data='{user_id}_{chat_id}_{message_id}_nospam'.format(user_id=user_id, chat_id=chat_id, message_id=message_id))
     reply_markup = InlineKeyboardMarkup([[spam_button, no_spam_button]])
 
-    new_message = bot.forwardMessage(chat_id=admin_channel_id, from_chat_id=chat_id, message_id=message_id)
-    admin_message = bot.sendMessage(chat_id=admin_channel_id, text="Is this message spam?", reply_to_message_id=new_message.message_id, reply_markup=reply_markup)
+    direct_link = "\n\n[Direct Link](https://t.me/{g_name}/{m_id})".format(
+        g_name=update.message.chat.username,
+        m_id=update.message.message_id)
+
+    new_message = bot.forwardMessage(chat_id=admin_channel_id,
+                                     from_chat_id=chat_id,
+                                     message_id=message_id)
+
+    admin_message = bot.sendMessage(chat_id=admin_channel_id, text="Is this message spam?" + direct_link,
+                                    reply_to_message_id=new_message.message_id,
+                                    reply_markup=reply_markup,
+                                    disable_web_page_preview=True,
+                                    parse_mode="Markdown")
 
     # Create a new "incident" which will be handled by the admins
     new_incident = Incident(chat_id=chat_id, message_id=message_id, admin_channel_message_id=admin_message.message_id)

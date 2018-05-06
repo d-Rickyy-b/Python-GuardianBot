@@ -1,9 +1,11 @@
 import re
 
 from telegram.ext import BaseFilter
+import logging
 
 from config import whitelisted_channels, whitelisted_chats, whitelisted_groups, allowed_usernames
 
+logger = logging.getLogger(__name__)
 
 class _JoinChatLinkFilter(BaseFilter):
     name = "JoinChatLinkFilter"
@@ -71,7 +73,10 @@ class _UsernameFilter(BaseFilter):
             entities = message.parse_caption_entities(types="mention")
 
         for entity, username in entities.items():
-            if not username.lower() in [x.lower() for x in allowed_usernames]:
+            # check if mentioned username is in allowed_usernames list
+            # convert to lowercase to not have false positives
+            if username.lower() not in [x.lower() for x in allowed_usernames]:
+                logger.info("Username '{}' not in list of allowed usernames!".format(username))
                 return True
 
         return False
@@ -81,14 +86,16 @@ class _TDotMeUsernameFilter(BaseFilter):
     name = "TDotMeUsernameFilter"
 
     def filter(self, message):
-        text = ""
-        if message.text:
-            text = message.text
-        elif message.caption:
-            text = message.caption
+        entities = []
 
-        if re.search("((t(elegram)?\.(me|dog|org))\/(?!joinchat).+)", text, re.IGNORECASE):
-            return True
+        if message.text:
+            entities = message.parse_entities(types="url")
+        elif message.caption:
+            entities = message.parse_caption_entities(types="url")
+
+        for entity, url in entities.items():
+            if re.search("((t(elegram)?\.(me|dog|org))\/(?!joinchat)[a-zA-Z_]+)", url, re.IGNORECASE):
+                return True
 
         return False
 
