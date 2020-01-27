@@ -96,8 +96,10 @@ def ask_admins(update, context):
     user_id = update.message.from_user.id
     bot = context.bot
 
-    spam_button = InlineKeyboardButton("Spam", callback_data='{user_id}_{chat_id}_{message_id}_spam'.format(user_id=user_id, chat_id=chat_id, message_id=message_id))
-    no_spam_button = InlineKeyboardButton("No Spam", callback_data='{user_id}_{chat_id}_{message_id}_nospam'.format(user_id=user_id, chat_id=chat_id, message_id=message_id))
+    spam_button = InlineKeyboardButton("Spam",
+                                       callback_data='{user_id}_{chat_id}_{message_id}_spam'.format(user_id=user_id, chat_id=chat_id, message_id=message_id))
+    no_spam_button = InlineKeyboardButton("No Spam", callback_data='{user_id}_{chat_id}_{message_id}_nospam'.format(user_id=user_id, chat_id=chat_id,
+                                                                                                                    message_id=message_id))
     reply_markup = InlineKeyboardMarkup([[spam_button, no_spam_button]])
 
     direct_link = "\n\n[Direct Link](https://t.me/{g_name}/{m_id})".format(
@@ -243,7 +245,8 @@ def flood_check(update, context):
     bot = context.bot
     floodBuffer.add_message(update.effective_message)
     if floodBuffer.flood_reached(user_id):
-        log_msg = "Detected flood in chat @{} by user '{}'. Kicking user!".format(update.effective_message.chat.username, update.effective_message.from_user.full_name)
+        log_msg = "Detected flood in chat @{} by user '{}'. Kicking user!".format(update.effective_message.chat.username,
+                                                                                  update.effective_message.from_user.full_name)
         notify_admins(log_msg)
         logger.info(log_msg)
         try:
