@@ -225,17 +225,22 @@ def callback_handler(update, context):
 
 def admin_mention(update, context):
     bot = context.bot
-    if update.message.chat.username is None:
-        return
+
+    if update.message.chat.username:
+        direct_link = "[Direct Link](https://t.me/{g_name}/{m_id})".format(g_name=update.effective_chat.username,
+                                                                           m_id=update.effective_message)
+    else:
+        c_id = str(update.effective_chat.id).replace("-100", "")
+        direct_link = "[Direct Link](https://t.me/c/{c_id}/{m_id})".format(c_id=c_id,
+                                                                           m_id=update.effective_message.message_id)
 
     # for admin in admins:
     bot.sendMessage(config.admin_channel_id, text="*Someone needs an admin!*\n"
                                                   "\n*Chat:* {chat}"
                                                   "\n*Name:* {user}"
-                                                  "\n\n[Direct Link](https://t.me/{g_name}/{m_id})".format(chat=update.message.chat.title,
-                                                                                                           user=update.message.from_user.first_name,
-                                                                                                           g_name=update.message.chat.username,
-                                                                                                           m_id=update.message.message_id),
+                                                  "\n\n{direct_link}".format(chat=update.message.chat.title,
+                                                                             user=update.message.from_user.first_name,
+                                                                             direct_link=direct_link),
                     parse_mode="Markdown")
 
 
