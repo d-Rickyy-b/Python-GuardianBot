@@ -57,9 +57,10 @@ def reload_admins():
 
 # Message will be called if spam is detected. The message will be removed
 # and the sender will be kicked
-def scam_detected(bot, update):
+def scam_detected(update, context):
     chat_id = update.effective_message.chat_id
     user = update.effective_message.from_user
+    bot = context.bot
 
     scam_found = "Detected scam in chat @{} by user '{}' - @{}. Kicking user for scam.".format(update.message.chat.username, user.full_name, user.username)
     logger.info(scam_found)
@@ -88,11 +89,12 @@ def scam_detected(bot, update):
 
 # Method which will be called, when the message could potentially be spam, but
 # a human needs to decide
-def ask_admins(bot, update):
+def ask_admins(update, context):
     # Ask admins if message is spam
     chat_id = update.message.chat.id
     message_id = update.message.message_id
     user_id = update.message.from_user.id
+    bot = context.bot
 
     spam_button = InlineKeyboardButton("Spam", callback_data='{user_id}_{chat_id}_{message_id}_spam'.format(user_id=user_id, chat_id=chat_id, message_id=message_id))
     no_spam_button = InlineKeyboardButton("No Spam", callback_data='{user_id}_{chat_id}_{message_id}_nospam'.format(user_id=user_id, chat_id=chat_id, message_id=message_id))
@@ -125,9 +127,10 @@ def notify_admins(text):
 # When a new user joins the group, his name should be checked for frequently
 # used scammer names. Often scammers use a pattern like 'Elvira J Joy' or '
 # Elly W Wonder', which can easily be detected via RegEx
-def check_and_ban_suspicious_users(bot, update):
+def check_and_ban_suspicious_users(update, context):
     chat_id = update.message.chat.id
     user_id = update.message.from_user.id
+    bot = context.bot
 
     for member in update.message.new_chat_members:
         username = member.username if member.username is not None else "no username"
@@ -155,18 +158,19 @@ def check_and_ban_suspicious_users(bot, update):
 
 # This function will be called, when someone adds this bot to any group which
 # is not mentioned in the AllowedGroups filter
-def leave_group(bot, update):
+def leave_group(update, context):
     update.message.reply_text("I am currently only for private use! Goodbye!")
     logger.info("Leaving group '{g_name}' - {g_id}".format(g_name=update.message.chat.title, g_id=update.message.chat.id))
-    bot.leaveChat(update.message.chat_id)
+    context.bot.leaveChat(update.message.chat_id)
 
 
-def callback_handler(bot, update):
+def callback_handler(update, context):
     orig_user_id = update.callback_query.from_user.id
     orig_chat_id = update.callback_query.message.chat.id
     orig_message_id = update.callback_query.message.message_id
     callback_query_id = update.callback_query.id
     data = update.callback_query.data
+    bot = context.bot
 
     # Only admins are allowed to use admin callback functions
     if orig_user_id not in config.admins:
@@ -217,7 +221,8 @@ def callback_handler(bot, update):
         bot.answerCallbackQuery(callback_query_id=callback_query_id, text=text)
 
 
-def admin_mention(bot, update):
+def admin_mention(update, context):
+    bot = context.bot
     if update.message.chat.username is None:
         return
 
@@ -232,9 +237,10 @@ def admin_mention(bot, update):
                     parse_mode="Markdown")
 
 
-def flood_check(bot, update):
+def flood_check(update, context):
     chat_id = update.effective_message.chat_id
     user_id = update.effective_message.from_user.id
+    bot = context.bot
     floodBuffer.add_message(update.effective_message)
     if floodBuffer.flood_reached(user_id):
         log_msg = "Detected flood in chat @{} by user '{}'. Kicking user!".format(update.effective_message.chat.username, update.effective_message.from_user.full_name)
