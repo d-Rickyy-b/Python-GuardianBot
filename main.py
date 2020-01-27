@@ -268,7 +268,13 @@ dp.add_handler(MessageHandler(Filters.group, flood_check))
 dp.add_handler(CallbackQueryHandler(callback_handler))
 
 reload_admins()
-updater.start_polling()
+
+if config.USE_WEBHOOK:
+    updater.start_webhook(listen="127.0.0.1", port=config.WEBHOOK_PORT, url_path=config.BOT_TOKEN, cert=config.CERTPATH, webhook_url=config.WEBHOOK_URL)
+    updater.bot.set_webhook(config.WEBHOOK_URL)
+else:
+    updater.start_polling()
+
 logger.info("Bot started as @{}".format(updater.bot.username))
 updater.bot.sendMessage(config.admin_channel_id, text="Bot restarted")
 logger.info("Admins are: {}".format(config.admins))
