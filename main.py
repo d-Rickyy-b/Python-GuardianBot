@@ -7,10 +7,10 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.error import TelegramError, BadRequest
 from telegram.ext import Updater, MessageHandler, Filters, CallbackQueryHandler
 
+import config
 from FloodBuffer import FloodBuffer
 from Incident import Incident
 from Incidents import Incidents
-from config import BOT_TOKEN, admin_channel_id, admins, chats
 from filters import AdminFilters
 from filters import ScamFilters
 
@@ -29,11 +29,11 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 # Add logging.StreamHandler() for stderr debugging purposes
 
 # Check if bot token is valid
-if not re.match("[0-9]+:[a-zA-Z0-9\-_]+", BOT_TOKEN):
+if not re.match(r"[0-9]+:[a-zA-Z0-9\-_]+", config.BOT_TOKEN):
     logging.error("Bot token not correct - please check.")
     exit(1)
 
-updater = Updater(token=BOT_TOKEN)
+updater = Updater(token=config.BOT_TOKEN, use_context=True)
 dp = updater.dispatcher
 incidents = Incidents()
 floodBuffer = FloodBuffer()
@@ -43,8 +43,8 @@ channel_admins = []
 # Has no real use for now. Can be used to contact admins in private
 def reload_admins():
     global channel_admins
-    for chat_id in chats:
-        my_admins = list(admins)
+    for chat_id in config.chats:
+        my_admins = list(config.admins)
         try:
             for admin in updater.bot.getChatAdministrators(chat_id):
                 my_admins.append(admin.user.id)
@@ -63,7 +63,7 @@ def scam_detected(bot, update):
 
     scam_found = "Detected scam in chat @{} by user '{}' - @{}. Kicking user for scam.".format(update.message.chat.username, user.full_name, user.username)
     logger.info(scam_found)
-    bot.send_message(admin_channel_id, scam_found)
+    bot.send_message(config.admin_channel_id, scam_found)
 
     try:
         # ban user from chat
@@ -71,7 +71,7 @@ def scam_detected(bot, update):
     except TelegramError:
         error_msg = "Not able to kick user {}: {}".format(user.id, update.message)
         logger.warning(error_msg)
-        bot.send_message(admin_channel_id, error_msg)
+        bot.send_message(config.admin_channel_id, error_msg)
 
     try:
         # Delete message
@@ -83,7 +83,7 @@ def scam_detected(bot, update):
                                                                           user=update.message.from_user.first_name,
                                                                           g_name=update.message.chat.username,
                                                                           m_id=update.message.message_id)
-        bot.send_message(admin_channel_id, warn_msg)
+        bot.send_message(config.admin_channel_id, warn_msg)
 
 
 # Method which will be called, when the message could potentially be spam, but
@@ -102,11 +102,11 @@ def ask_admins(bot, update):
         g_name=update.message.chat.username,
         m_id=update.message.message_id)
 
-    new_message = bot.forwardMessage(chat_id=admin_channel_id,
+    new_message = bot.forwardMessage(chat_id=config.admin_channel_id,
                                      from_chat_id=chat_id,
                                      message_id=message_id)
 
-    admin_message = bot.sendMessage(chat_id=admin_channel_id, text="Is this message spam?" + direct_link,
+    admin_message = bot.sendMessage(chat_id=config.admin_channel_id, text="Is this message spam?" + direct_link,
                                     reply_to_message_id=new_message.message_id,
                                     reply_markup=reply_markup,
                                     disable_web_page_preview=True,
@@ -119,7 +119,7 @@ def ask_admins(bot, update):
 
 # Method to notify admins about stuff
 def notify_admins(text):
-    updater.bot.send_message(admin_channel_id, text=text)
+    updater.bot.send_message(config.admin_channel_id, text=text)
 
 
 # When a new user joins the group, his name should be checked for frequently
@@ -148,7 +148,7 @@ def check_and_ban_suspicious_users(bot, update):
                 except TelegramError as e:
                     logger.error(e)
 
-                    bot.send_message(admin_channel_id, text=text)
+                    bot.send_message(config.admin_channel_id, text=text)
 
     return False
 
@@ -169,7 +169,7 @@ def callback_handler(bot, update):
     data = update.callback_query.data
 
     # Only admins are allowed to use admin callback functions
-    if orig_user_id not in admins:
+    if orig_user_id not in config.admins:
         logger.error("User {} used admin callback, but not in admin list!".format(orig_user_id))
         return
 
@@ -222,13 +222,13 @@ def admin_mention(bot, update):
         return
 
     # for admin in admins:
-    bot.sendMessage(admin_channel_id, text="*Someone needs an admin!*\n"
-                                           "\n*Chat:* {chat}"
-                                           "\n*Name:* {user}"
-                                           "\n\n[Direct Link](https://t.me/{g_name}/{m_id})".format(chat=update.message.chat.title,
-                                                                                                    user=update.message.from_user.first_name,
-                                                                                                    g_name=update.message.chat.username,
-                                                                                                    m_id=update.message.message_id),
+    bot.sendMessage(config.admin_channel_id, text="*Someone needs an admin!*\n"
+                                                  "\n*Chat:* {chat}"
+                                                  "\n*Name:* {user}"
+                                                  "\n\n[Direct Link](https://t.me/{g_name}/{m_id})".format(chat=update.message.chat.title,
+                                                                                                           user=update.message.from_user.first_name,
+                                                                                                           g_name=update.message.chat.username,
+                                                                                                           m_id=update.message.message_id),
                     parse_mode="Markdown")
 
 
@@ -261,6 +261,6 @@ dp.add_handler(CallbackQueryHandler(callback_handler))
 reload_admins()
 updater.start_polling()
 logger.info("Bot started as @{}".format(updater.bot.username))
-updater.bot.sendMessage(admin_channel_id, text="Bot restarted")
-logger.info("Admins are: {}".format(admins))
+updater.bot.sendMessage(config.admin_channel_id, text="Bot restarted")
+logger.info("Admins are: {}".format(config.admins))
 updater.idle()
