@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/d-Rickyy-b/Python-GuardianBot.svg?branch=master)](https://travis-ci.org/d-Rickyy-b/Python-GuardianBot)
+[![Build Status](https://travis-ci.com/d-Rickyy-b/Python-GuardianBot.svg?branch=master)](https://travis-ci.com/d-Rickyy-b/Python-GuardianBot)
 
 # Python-GuardianBot
 This bot was designed for keeping spam and ads out of your public Telegram groups. It helps you by searching through all of the specified groups' messages. Keep in mind that the bot needs to have "privacy mode" switched off via [@BotFather](https://t.me/BotFather), to check all the messages.
